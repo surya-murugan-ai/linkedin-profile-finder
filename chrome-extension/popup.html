@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1> LinkedIn Profile Finder</h1>
+            <p>Find LinkedIn profiles with smart matching</p>
+        </div>
+        
+        <form id="searchForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required placeholder="John Doe">
+            </div>
+            
+            <div class="form-group">
+                <label for="title">Job Title</label>
+                <input type="text" id="title" name="title" placeholder="Software Engineer">
+            </div>
+            
+            <div class="form-group">
+                <label for="company">Company</label>
+                <input type="text" id="company" name="company" placeholder="Google">
+            </div>
+            
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" placeholder="San Francisco">
+            </div>
+            
+            <div class="form-group">
+                <label for="maxResults">Max Results</label>
+                <select id="maxResults" name="maxResults">
+                    <option value="5">5 results</option>
+                    <option value="10" selected>10 results</option>
+                    <option value="15">15 results</option>
+                    <option value="20">20 results</option>
+                </select>
+            </div>
+            
+            <button type="submit" id="searchBtn">
+                <span class="btn-text"> Search Profiles</span>
+                <span class="btn-loading" style="display: none;"> Searching...</span>
+            </button>
+        </form>
+        
+        <div id="results" class="results-container" style="display: none;">
+            <h3> Search Results</h3>
+            <div id="resultsList"></div>
+            <div class="export-buttons">
+                <button id="exportJson" class="export-btn"> Export JSON</button>
+                <button id="exportCsv" class="export-btn"> Export CSV</button>
+            </div>
+        </div>
+        
+        <div id="status" class="status"></div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
