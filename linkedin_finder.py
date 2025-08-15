@@ -128,8 +128,34 @@ def setup_driver() -> webdriver.Chrome:
     # Optional: run headless (comment out for debugging)
     # chrome_options.add_argument("--headless")
     
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    try:
+        # Try to use ChromeDriverManager with explicit version
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+    except Exception as e:
+        print(f"ChromeDriverManager failed: {e}")
+        print("Trying alternative approach...")
+        
+        # Alternative: Try to find Chrome driver in PATH or common locations
+        try:
+            # Try without service specification
+            driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e2:
+            print(f"Direct Chrome driver failed: {e2}")
+            print("\n" + "="*60)
+            print("CHROME BROWSER NOT FOUND!")
+            print("="*60)
+            print("This error occurs because Google Chrome is not installed on your system.")
+            print("\nTo fix this issue, please:")
+            print("1. Download and install Google Chrome from: https://www.google.com/chrome/")
+            print("2. After installation, restart your terminal/command prompt")
+            print("3. Run this script again")
+            print("\nAlternative solutions:")
+            print("- If you prefer not to install Chrome, you can manually download ChromeDriver")
+            print("  from https://chromedriver.chromium.org/downloads and place it in your PATH")
+            print("- Or use a different browser (requires code modification)")
+            print("="*60)
+            raise Exception("Chrome browser not found. Please install Google Chrome and try again.")
     
     # Remove webdriver property
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
