@@ -4,12 +4,15 @@ A powerful Python tool that finds LinkedIn profile URLs using real browser autom
 
 ## ✨ Features
 
-- **Real Browser Automation** - Uses Selenium with Chrome to avoid blocking issues
+- **Real Browser Automation** - Uses Selenium with Chrome/Chromium to avoid blocking issues
 - **Multiple Search Strategies** - Tries different query formats for better results
 - **Smart Matching** - Scores results based on name, title, and company matches
 - **Bulk Processing** - Support for CSV input files
 - **Respectful Rate Limiting** - Built-in delays to avoid being blocked
 - **High Accuracy** - Finds actual LinkedIn profiles, not just guessed URLs
+- **Multiple Versions** - Standard, Fast, and Chromium variants for different use cases
+- **REST API** - FastAPI-based web service for programmatic access
+- **Web Interface** - Simple HTML interface for easy testing
 
 ## 🚀 Quick Start
 
@@ -45,8 +48,9 @@ A powerful Python tool that finds LinkedIn profile URLs using real browser autom
 
 ## 📖 Usage
 
-### Single Person Search
+### Command Line Interface
 
+#### Standard Version (Recommended)
 ```bash
 # Basic search with name only
 python linkedin_finder.py --name "John Doe"
@@ -56,6 +60,18 @@ python linkedin_finder.py --name "John Doe" --title "Software Engineer" --compan
 
 # Search with location
 python linkedin_finder.py --name "Jane Smith" --title "Product Manager" --company "Microsoft" --location "Seattle"
+```
+
+#### Fast Version (Optimized for Speed)
+```bash
+# Uses fewer search strategies for faster results
+python linkedin_finder_fast.py --name "John Doe" --title "Software Engineer" --company "Google"
+```
+
+#### Chromium Version (Headless Mode)
+```bash
+# Runs in headless mode for server environments
+python linkedin_finder_chromium.py --name "John Doe" --title "Software Engineer" --company "Google"
 ```
 
 ### Bulk Search from CSV
@@ -85,6 +101,85 @@ python linkedin_finder.py --name "John Doe" --out results.csv
 
 # Adjust delay between searches
 python linkedin_finder.py --name "John Doe" --sleep 3.0
+```
+
+## 🌐 Web API
+
+### Start the API Server
+
+```bash
+# Standard API
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+
+# Fast API (optimized)
+uvicorn api.main_fast:app --reload --host 0.0.0.0 --port 8000
+
+# Chromium API (headless)
+uvicorn api.main_chromium:app --reload --host 0.0.0.0 --port 8000
+```
+
+### API Endpoints
+
+- **Health Check**: `GET /health`
+- **Single Search**: `POST /search`
+- **Batch Search**: `POST /search/batch`
+- **Interactive Docs**: `http://localhost:8000/docs`
+- **Web Interface**: Open `api/index.html` in your browser
+
+### API Usage Examples
+
+#### Python Client
+```python
+import requests
+
+# Single search
+response = requests.post("http://localhost:8000/search", json={
+    "name": "John Doe",
+    "title": "Software Engineer",
+    "company": "Google"
+})
+
+results = response.json()
+print(f"Found {results['total_results']} profiles")
+
+# Batch search
+batch_response = requests.post("http://localhost:8000/search/batch", json={
+    "queries": [
+        {"name": "John Doe", "title": "Software Engineer"},
+        {"name": "Jane Smith", "title": "Product Manager"}
+    ]
+})
+```
+
+#### JavaScript/Node.js
+```javascript
+// Single search
+const response = await fetch('http://localhost:8000/search', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        name: 'John Doe',
+        title: 'Software Engineer',
+        company: 'Google'
+    })
+});
+
+const results = await response.json();
+console.log(`Found ${results.total_results} profiles`);
+```
+
+#### cURL
+```bash
+# Single search
+curl -X POST "http://localhost:8000/search" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "title": "Software Engineer",
+    "company": "Google"
+  }'
 ```
 
 ## 📊 Output Format
@@ -136,12 +231,25 @@ The tool automatically:
 
 ```
 linkedin_profile_finder/
-├── linkedin_finder.py      # Main script
-├── requirements.txt        # Python dependencies
-├── README.md              # This file
-├── .gitignore             # Git ignore rules
-├── results.json           # Output file (example)
-└── venv/                  # Virtual environment (ignored by git)
+├── linkedin_finder.py              # Main script (standard version)
+├── linkedin_finder_fast.py         # Fast optimized version
+├── linkedin_finder_chromium.py     # Chromium/headless version
+├── requirements.txt                # Python dependencies
+├── README.md                      # This file
+├── .gitignore                     # Git ignore rules
+├── results.json                   # Output file (example)
+├── venv/                          # Virtual environment (ignored by git)
+├── api/                           # Web API components
+│   ├── main.py                    # Standard FastAPI app
+│   ├── main_fast.py               # Fast API version
+│   ├── main_chromium.py           # Chromium API version
+│   ├── index.html                 # Web interface
+│   ├── client_example.py          # Python client example
+│   └── README.md                  # API documentation
+├── start_api.py                   # API startup script
+├── start_api_chromium.py          # Chromium API startup script
+├── check_chrome.py                # Chrome installation checker
+└── test_chrome.py                 # Chrome functionality tester
 ```
 
 ## 🛠️ How It Works
@@ -163,6 +271,16 @@ linkedin_profile_finder/
 
 5. **Output**: Returns ranked results with confidence scores
 
+## 🔄 Version Comparison
+
+| Feature | Standard | Fast | Chromium |
+|---------|----------|------|----------|
+| Search Strategies | 3 | 1-2 | 3 |
+| Speed | Medium | Fast | Medium |
+| Browser Mode | Visible | Headless | Headless |
+| Use Case | Development | Production | Server |
+| Memory Usage | Higher | Lower | Lower |
+
 ## 🔒 Privacy & Ethics
 
 - **Respectful Usage**: Built-in delays to avoid overwhelming servers
@@ -177,6 +295,7 @@ linkedin_profile_finder/
 1. **Chrome not found**
    - Ensure Chrome browser is installed
    - The tool will automatically download ChromeDriver
+   - Run `python check_chrome.py` to verify installation
 
 2. **No results found**
    - Try different search terms
@@ -186,10 +305,17 @@ linkedin_profile_finder/
 3. **Browser crashes**
    - Close other Chrome instances
    - Restart the script
+   - Try the Chromium version for better stability
 
 4. **Slow performance**
+   - Use the Fast version for quicker results
    - Reduce `--max-results` value
    - Increase `--sleep` delay
+
+5. **API not responding**
+   - Check if the server is running: `curl http://localhost:8000/health`
+   - Check server logs for error messages
+   - Verify Chrome installation
 
 ### Debug Mode
 
@@ -198,6 +324,16 @@ For debugging, the script shows detailed logs:
 - Number of results found
 - URLs being extracted
 - Confidence scores
+
+### Testing Tools
+
+```bash
+# Test Chrome installation
+python test_chrome.py
+
+# Check Chrome availability
+python check_chrome.py
+```
 
 ## 🤝 Contributing
 
@@ -224,6 +360,7 @@ If you encounter issues or have questions:
 - Check the troubleshooting section above
 - Review the logs for error messages
 - Create an issue in the repository
+- Check the API documentation at `api/README.md`
 
 ---
 
