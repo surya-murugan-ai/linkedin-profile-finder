@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LinkedIn Profile Finder API</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #0077b5;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #0077b5;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0077b5;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #005885;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            border-left: 4px solid #0077b5;
+        }
+        .result-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .result-url {
+            color: #0077b5;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .result-url:hover {
+            text-decoration: underline;
+        }
+        .result-score {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #f5c6cb;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #c3e6cb;
+        }
+        .batch-input {
+            border: 2px dashed #ddd;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .batch-input.dragover {
+            border-color: #0077b5;
+            background-color: #f0f8ff;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0077b5;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 LinkedIn Profile Finder API</h1>
+    
+    <!-- Single Search Section -->
+    <div class="container">
+        <h2>Single Profile Search</h2>
+        <form id="singleSearchForm">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" required placeholder="e.g., John Doe">
+            </div>
+            <div class="form-group">
+                <label for="title">Job Title</label>
+                <input type="text" id="title" name="title" placeholder="e.g., Software Engineer">
+            </div>
+            <div class="form-group">
+                <label for="company">Company</label>
+                <input type="text" id="company" name="company" placeholder="e.g., Google">
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" placeholder="e.g., San Francisco">
+            </div>
+            <div class="form-group">
+                <label for="maxResults">Max Results</label>
+                <input type="number" id="maxResults" name="maxResults" value="10" min="1" max="50">
+            </div>
+            <button type="submit" id="singleSearchBtn">Search Profile</button>
+        </form>
+        <div id="singleResults"></div>
+    </div>
+
+    <!-- Batch Search Section -->
+    <div class="container">
+        <h2>Batch Profile Search</h2>
+        <div class="batch-input" id="batchInput">
+            <p>Enter JSON array of search queries:</p>
+            <textarea id="batchQueries" placeholder='[
+  {
+    "name": "John Doe",
+    "title": "Software Engineer",
+    "company": "Google"
+  },
+  {
+    "name": "Jane Smith", 
+    "title": "Product Manager",
+    "company": "Microsoft"
+  }
+]'></textarea>
+        </div>
+        <div class="form-group">
+            <label for="batchMaxResults">Max Results per Query</label>
+            <input type="number" id="batchMaxResults" name="batchMaxResults" value="5" min="1" max="50">
+        </div>
+        <button id="batchSearchBtn">Search Batch</button>
+        <div id="batchResults"></div>
+    </div>
+
+    <!-- API Status -->
+    <div class="container">
+        <h2>API Status</h2>
+        <button id="checkHealthBtn">Check API Health</button>
+        <div id="healthStatus"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+
+        // Single Search
+        document.getElementById('singleSearchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('singleSearchBtn');
+            const resultsDiv = document.getElementById('singleResults');
+            
+            btn.disabled = true;
+            btn.textContent = 'Searching...';
+            resultsDiv.innerHTML = '<div class="loading">Searching for LinkedIn profiles...</div>';
+
+            const formData = new FormData(e.target);
+            const payload = {
+                name: formData.get('name'),
+                title: formData.get('title') || null,
+                company: formData.get('company') || null,
+                location: formData.get('location') || null,
+                max_results: parseInt(formData.get('maxResults'))
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displaySingleResults(data);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Search Profile';
+            }
+        });
+
+        // Batch Search
+        document.getElementById('batchSearchBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('batchSearchBtn');
+            const resultsDiv = document.getElementById('batchResults');
+            const queriesText = document.getElementById('batchQueries').value;
+            const maxResults = parseInt(document.getElementById('batchMaxResults').value);
+
+            btn.disabled = true;
+            btn.textContent = 'Searching...';
+            resultsDiv.innerHTML = '<div class="loading">Searching for LinkedIn profiles...</div>';
+
+            try {
+                const queries = JSON.parse(queriesText);
+                const payload = {
+                    queries: queries,
+                    max_results: maxResults
+                };
+
+                const response = await fetch(`${API_BASE_URL}/search/batch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                displayBatchResults(data);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Search Batch';
+            }
+        });
+
+        // Health Check
+        document.getElementById('checkHealthBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('checkHealthBtn');
+            const statusDiv = document.getElementById('healthStatus');
+            
+            btn.disabled = true;
+            btn.textContent = 'Checking...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = `
+                        <div class="success">
+                            <strong>API is healthy!</strong><br>
+                            Status: ${data.status}<br>
+                            Version: ${data.version}<br>
+                            Timestamp: ${data.timestamp}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('API returned error status');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <div class="error">
+                        <strong>API is not available!</strong><br>
+                        Error: ${error.message}<br>
+                        Make sure the API server is running on ${API_BASE_URL}
+                    </div>
+                `;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Check API Health';
+            }
+        });
+
+        function displaySingleResults(data) {
+            const resultsDiv = document.getElementById('singleResults');
+            
+            let html = `
+                <div class="results">
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${data.total_results}</div>
+                            <div class="stat-label">Profiles Found</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.search_time}s</div>
+                            <div class="stat-label">Search Time</div>
+                        </div>
+                    </div>
+            `;
+
+            if (data.results.length === 0) {
+                html += '<p>No LinkedIn profiles found.</p>';
+            } else {
+                data.results.forEach((result, index) => {
+                    html += `
+                        <div class="result-item">
+                            <div><strong>${index + 1}.</strong> <a href="${result.url}" target="_blank" class="result-url">${result.url}</a></div>
+                            <div>Score: <span class="result-score">${result.score.toFixed(2)}</span></div>
+                            ${result.title ? `<div>Title: ${result.title}</div>` : ''}
+                            ${result.snippet ? `<div>Snippet: ${result.snippet.substring(0, 150)}...</div>` : ''}
+                        </div>
+                    `;
+                });
+            }
+
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+
+        function displayBatchResults(data) {
+            const resultsDiv = document.getElementById('batchResults');
+            
+            let html = `
+                <div class="results">
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${data.total_searches}</div>
+                            <div class="stat-label">Searches</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.total_profiles_found}</div>
+                            <div class="stat-label">Profiles Found</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.batch_time}s</div>
+                            <div class="stat-label">Total Time</div>
+                        </div>
+                    </div>
+            `;
+
+            data.searches.forEach((search, index) => {
+                html += `
+                    <div class="result-item">
+                        <h3>Search ${index + 1}: ${search.query.name}</h3>
+                        <p>Results: ${search.total_results} profiles found</p>
+                        ${search.results.length > 0 ? `
+                            <div><strong>Best Match:</strong> <a href="${search.results[0].url}" target="_blank" class="result-url">${search.results[0].url}</a> (Score: ${search.results[0].score.toFixed(2)})</div>
+                        ` : '<p>No profiles found</p>'}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+
+        // Auto-check health on page load
+        window.addEventListener('load', () => {
+            document.getElementById('checkHealthBtn').click();
+        });
+    </script>
+</body>
+</html>
